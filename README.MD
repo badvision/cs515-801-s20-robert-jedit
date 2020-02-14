@@ -1,6 +1,6 @@
 # Build notes:
 
-In order to build this application you need a Java 11 JDK installed and configured.  The easiest way to do this is to first instal jEnv if you are on Linux or OSX, or Jabba if you are on Windows.
+This is a supplemental to the instructions in README.SRC.txt.  Please read that before this file.  In order to build this application you need a Java 11 JDK installed and configured.  The easiest way to do this is to first instal jEnv if you are on Linux or OSX, or Jabba if you are on Windows.
 
 ## Installing JEnv
 
@@ -36,6 +36,8 @@ After that you can type `jabba install openjdk@1.11.0` to install JDK 11.
 You need Apache Ant in your path.  For more information see the Apache Ant homepage for your operating system.
 
 You should only need to type `ant build` to generate the build/jedit.jar.
+
+If you would like to build from IntelliJ, you must first add the JSR305 annotations library to Project Settings > Modules > Dependencies and select + (add) and finally choose Maven and search for JSR305.
 
 ## Executing
 
