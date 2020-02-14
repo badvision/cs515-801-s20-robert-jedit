@@ -41,4 +41,4 @@ If you would like to build from IntelliJ, you must first add the JSR305 annotati
 
 ## Executing
 
-From the build folder and Java 11 in your path, invoke via `java -jar jedit.jar`
+From the build folder and Java 11 in your path, invoke via `java -jar jedit.jar` -- If you get errors that it cannot find files in build/doc you can work around this by copying the doc folder from the root folder into the build folder.  In a more ideal world this would be a maven project and the doc folder would be under src/resources and things would happen automatically, but this is an Ant/Ivy project and therefore unless you run with `ant run` expect a few surprises.
