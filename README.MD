@@ -22,7 +22,8 @@ After installing the Java 11 JDK, use `jenv add PATH` where PATH is the root pat
 
 ## Installing Jabba
 
-[Jabba](https://github.com/shyiko/jabba#installation) can be installed from the Windows PowerShell environment.  You might first [have to enable scripts](https://stackoverflow.com/questions/16460163/ps1-cannot-be-loaded-because-the-execution-of-scripts-is-disabled-on-this-syste) and answer the security confirmation prompt:  `Set-ExecutionPolicy Unrestricted` and then ```
+[Jabba](https://github.com/shyiko/jabba#installation) can be installed from the Windows PowerShell environment.  You might first [have to enable scripts](https://stackoverflow.com/questions/16460163/ps1-cannot-be-loaded-because-the-execution-of-scripts-is-disabled-on-this-syste) and answer the security confirmation prompt:  `Set-ExecutionPolicy Unrestricted` and then use the following to download and install Jabba:
+```
 Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Invoke-Expression (
   Invoke-WebRequest https://github.com/shyiko/jabba/raw/master/install.ps1 -UseBasicParsing
