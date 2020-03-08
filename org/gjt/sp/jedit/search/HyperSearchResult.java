@@ -30,6 +30,7 @@ import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.EditBus.EBHandler;
 import org.gjt.sp.util.ThreadUtilities;
+import java.util.ArrayList;
 //}}}
 
 /**
@@ -65,21 +66,21 @@ public class HyperSearchResult implements HyperSearchNode
 		if(buffer == null)
 			return null;
 
-		Selection[] returnValue = new Selection[occurCount];
+		ArrayList<Selection> returnValues = new ArrayList<>();
 		Occur o = occur;
-		int i = 0;
 		while(o != null)
 		{
 			int start = o.startPos.getOffset();
 			int end = o.endPos.getOffset();
 			Selection.Range s = new Selection.Range(
-				start,
-				end
+					start,
+					end
 			);
-			returnValue[i++] = s;
+
+			returnValues.add(s);
 			o = o.next;
 		}
-		return returnValue;
+		return returnValues.toArray(new Selection[0]);
 	} //}}}
 
 	//{{{ goTo() method
@@ -107,7 +108,7 @@ public class HyperSearchResult implements HyperSearchNode
 		this.line = line;
 
 		str = (line + 1) + ": " + buffer.getLineText(line)
-			.replace('\t',' ').trim();
+				.replace('\t',' ').trim();
 	} //}}}
 
 	//{{{ bufferOpened() method
@@ -151,7 +152,7 @@ public class HyperSearchResult implements HyperSearchNode
 	{
 		return path.equals(MiscUtilities.resolveSymlinks(this.path));
 	} //}}}
-	
+
 	//{{{ equals() method
 	public boolean equals(Object compareObj)
 	{
@@ -159,7 +160,7 @@ public class HyperSearchResult implements HyperSearchNode
 			return false;
 		HyperSearchResult otherResult = (HyperSearchResult)compareObj;
 		return pathEquals(otherResult.path) && line == otherResult.line
-			&& buffer.equals(otherResult.buffer);		
+				&& buffer.equals(otherResult.buffer);
 	}//}}}
 
 	//}}}
@@ -185,9 +186,9 @@ public class HyperSearchResult implements HyperSearchNode
 		void bufferOpened()
 		{
 			startPos = buffer.createPosition(Math.min(
-				buffer.getLength(),start));
+					buffer.getLength(),start));
 			endPos = buffer.createPosition(Math.min(
-				buffer.getLength(),end));
+					buffer.getLength(),end));
 		} //}}}
 
 		//{{{ bufferClosed() method
@@ -257,7 +258,7 @@ public class HyperSearchResult implements HyperSearchNode
 		public void handleBufferUpdate(BufferUpdate msg)
 		{
 			if (msg.getWhat() == BufferUpdate.LOADED &&
-				msg.getBuffer() == buffer)
+					msg.getBuffer() == buffer)
 			{
 				bufferLoaded();
 			}
