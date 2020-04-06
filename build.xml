@@ -5,7 +5,8 @@
 	 xmlns:launch4j="antlib:net.sf.launch4j.ant"
 	 xmlns:appbundler="antlib:com.oracle.appbundler"
 	 xmlns:fop="antlib:org.apache.fop.tools.anttasks"
-	 xmlns:ivy="antlib:org.apache.ivy.ant">
+	 xmlns:ivy="antlib:org.apache.ivy.ant"
+	 xmlns:sonar="antlib:org.sonar.ant">
 	<description>
 		This is an ant build.xml file for building jEdit - Programmer's Text Editor.
 	</description>
@@ -36,6 +37,10 @@
 		  location="${build.dir}"/>
 	<property name="textAreaPackage"
 		  location="../textarea"/>
+	<property name="source.dir"
+			  location="src/java"/>
+	<property name="test.dir"
+			  location="src/test"/>
 
 	<!-- Ivy Properties -->
 	<property name="config.ivy.version"
@@ -46,6 +51,16 @@
 		  value="ivy-${config.ivy.version}.jar"/>
 	<property name="ivy.jar.file"
 		  location="${ivy.jar.dir}/${ivy.jar.filename}"/>
+
+	<!-- Sonar Qube (Sonar Scanner plugin) -->
+	<property name="sonar.host.url" value="http://localhost:9000" />
+	<property name="sonar.projectKey" value="jEdit" />
+	<property name="sonar.projectName" value="jEdit" />
+	<property name="sonar.projectVersion" value="1.0" />
+	<property name="sonar.sources" value="org,de,test" />
+	<property name="sonar.login" value="a026514bf74bd2e5a5aa175296f316f209980982"/>
+	<property name="sonar.java.binaries" value="build" />
+	<property name="sonar.java.libraries" value="lib/*.jar" />	
 
 	<!-- Miscellaneous -->
 	<property name="jar.filename"
@@ -175,7 +190,7 @@
 			</classpath>
 
 			import java.util.regex.Pattern;
-			file = new File(basedir, "org/gjt/sp/jedit/jEdit.java");
+			file = new File(basedir, "src/java/org/gjt/sp/jedit/jEdit.java");
 			fileChars = new char[file.length()];
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 			reader.read(fileChars, 0, fileChars.length);
@@ -243,18 +258,17 @@
 				 defaultexcludes="false"/>
 		</delete>
 	</target>
-
 	<target name="compile"
 		depends="init">
 		<mkdir dir="${classes.dir}/core"/>
-		<depend srcDir="${basedir}"
+		<depend srcDir="${source.dir}"
 			destDir="${classes.dir}/core"
 			cache="${classes.dir}"/>
 		<dependset>
 			<srcfilelist files="build.xml"/>
 			<targetfileset dir="${classes.dir}/core"/>
 		</dependset>
-		<javac srcdir="${basedir}"
+		<javac srcdir="${source.dir}"
 		       destdir="${classes.dir}/core"
 		       debug="true"
 		       debuglevel="${config.build.debuglevel}"
@@ -276,7 +290,7 @@
 	<target name="compile-test"
 		depends="init,retrieve,compile">
 		<mkdir dir="${classes.dir}/test"/>
-		<depend srcDir="${basedir}/test"
+		<depend srcDir="${test.dir}"
 			destDir="${classes.dir}/test"
 			cache="${classes.dir}"/>
 		<dependset>
@@ -284,7 +298,7 @@
 			<srcfilelist files="ivy.xml"/>
 			<targetfileset dir="${classes.dir}/test"/>
 		</dependset>
-		<javac srcdir="test"
+		<javac srcdir="${test.dir}"
 		       destdir="${classes.dir}/test"
 		       debug="true"
 		       debuglevel="${config.build.debuglevel}"
@@ -477,7 +491,7 @@
 			<classpath location="${ant.library.dir}/ant-junit4.jar"/>
 			<formatter type="xml"/>
 			<batchtest todir="${build.dir}/test/raw-reports">
-				<fileset dir="test"/>
+				<fileset dir="${test.dir}"/>
 			</batchtest>
 		</junit>
 		<mkdir dir="${build.dir}/test/merged-reports"/>
@@ -496,10 +510,10 @@
 		<jar destfile="${jar.location}/${jar.filename}"
 		     basedir="${classes.dir}/core"
 		     compress="false"
-		     manifest="org/gjt/sp/jedit/jedit.manifest"
+		     manifest="${source.dir}/org/gjt/sp/jedit/jedit.manifest"
 		     duplicate="fail"
 		     index="true">
-			<fileset dir="${basedir}">
+			<fileset dir="${source.dir}">
 				<include name="org/gjt/sp/jedit/bsh/commands/*.bsh"/>
 				<include name="org/gjt/sp/jedit/**/*.dtd"/>
 				<include name="org/gjt/sp/jedit/default.abbrevs"/>
@@ -1347,7 +1361,7 @@
 					       ivysettings.xml
 					       icons/file.icns
 					       icons/icon.icns
-					       org/gjt/sp/jedit/jEdit.java
+					       ${source.dir}/org/gjt/sp/jedit/jEdit.java
 					       package-files/osx/**
 					       ${config.dist.dir}/${jar.filename}
 					       ${config.dist.dir}/doc/**
@@ -2041,7 +2055,7 @@ Press Return key to continue...
 					       icons/jedit.ico
 					       icons/WindowsInstallerSmallImage.bmp
 					       icons/WindowsInstallerImage.bmp
-					       org/gjt/sp/jedit/jEdit.java
+					       ${source.dir}/org/gjt/sp/jedit/jEdit.java
 					       package-files/windows/win32installer.iss
 					       ${config.dist.dir}/jedit.exe
 					       ${config.dist.dir}/${jar.filename}
@@ -2113,5 +2127,20 @@ Press Return key to continue...
 				</delete>
 			</contrib:then>
 		</contrib:if>
+	</target>
+<!-- Define the Sonar task if this hasn't been done in a common script -->
+ <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+  <classpath path="${ant.library.dir}" />
+  <classpath path="${mysql.library.dir}" />
+  <classpath><fileset dir="lib/" includes="sonar*.jar" /></classpath>
+ </taskdef>
+	<target name="sonar">
+		<taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+			<!-- Update the following line, or put the "sonarqube-ant-task-*.jar" file in your "$HOME/.ant/lib" folder -->
+			<classpath path="lib/sonarqube-ant-task-*.jar" />
+		</taskdef>
+	 
+		<!-- Execute SonarScanner for Ant Analysis -->
+		<sonar:sonar />
 	</target>
 </project>

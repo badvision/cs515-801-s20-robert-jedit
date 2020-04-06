@@ -1,4 +1,6 @@
 *.jar
 *.class
-/lib/docbook/docbook-xsl-resources.zip
 *.iml
+out
+build
+/lib/docbook/docbook-xsl-resources.zip
