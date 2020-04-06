@@ -57,7 +57,7 @@
 	<property name="sonar.projectKey" value="jEdit" />
 	<property name="sonar.projectName" value="jEdit" />
 	<property name="sonar.projectVersion" value="1.0" />
-	<property name="sonar.sources" value="org,de,test" />
+	<property name="sonar.sources" value="src/java,src/test" />
 	<property name="sonar.login" value="a026514bf74bd2e5a5aa175296f316f209980982"/>
 	<property name="sonar.java.binaries" value="build" />
 	<property name="sonar.java.libraries" value="lib/*.jar" />	
