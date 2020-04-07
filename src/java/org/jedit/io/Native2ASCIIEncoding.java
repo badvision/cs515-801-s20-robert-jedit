@@ -305,126 +305,67 @@ public class Native2ASCIIEncoding implements Encoding
 			return readn(cbuf, off, len);
 		}
 
+		private static final int UNICODE_ESCAPE_TOKEN_SIZE = 4;
 		private int readn(char[] cbuf, int off, int len) throws IOException
 		{
-			// read 5 chars more than requested to have
-			// more input if last character is a '\'
-			int bufLen = len + 5;
-			char[] buf = new char[bufLen];
-			// delegate read to the ISO-8859-1
-			int read = in.read(buf);
-			// EOF reached
-			if (read == -1)
-			{
-				return read;
-			}
-			// read = read from underlying stream
-			// result = read after conversion
-			int result = 0;
-			// how many additional characters need to be read
-			// because of collapsed escape sequences
-			int needed = 0;
-			// iterate read chars but maximum len ones
-			int i;
-outer:
-			for (i = 0; (i < read) && (i < len); i++)
-			{
-				// character under consideration
-				char c = buf[i];
-				// does not start escape sequence
-				if ((c != '\\') || escaped)
-				{
-					// add to result buffer and
-					// continue to next character
+			int totalRead = 0;
+			while (totalRead < len) {
+				int c=in.read();
+				if (c <= 0) {
+					break;
+				}
+				char ch = (char) c;
+				if (ch == '\\' && !escaped) {
+					ch = readUnicodeToken();
+				} else {
 					escaped = false;
-					cbuf[off + result++] = c;
-					continue;
 				}
-				// less than 5 characters left after current
-				// position because either there was no more
-				// input available or because of EOF
-				if (read - i - 1 < 5)
-				{
-					// try to read in more characters to
-					// complete the escape sequence
-					while (read < i + 1 + 5)
-					{
-						// read in missing characters
-						int read2 = in.read(buf, read, i + 1 + 5 - read);
-						// EOF reached
-						if (read2 == -1)
-						{
-							// add to result buffer and continue to next character if
-							// - permissive or
-							// - EOF reached after backslash or
-							// - not an escape sequence,
-							// otherwise throw exception
-							if (permissive || (read - i - 1 == 0) || (buf[i + 1] != 'u'))
-							{
-								escaped = true;
-								cbuf[off + result++] = c;
-								continue outer;
-							} else
-							{
-								throw new MalformedInputException(1);
-							}
-						}
-						read += read2;
+				cbuf[off+totalRead] = ch;
+				totalRead++;
+			}
+
+			return totalRead == 0 ? -1 : totalRead;
+		}
+
+		private char readUnicodeToken() throws IOException {
+			char[] unicodeToken = new char[UNICODE_ESCAPE_TOKEN_SIZE];
+			int n = in.read();
+			if (n == 'u' || n == 'U') {
+				int i = 0;
+				try {
+					for (i = 0; i < UNICODE_ESCAPE_TOKEN_SIZE; i++) {
+						unicodeToken[i] = (char) readOrFail();
+					}
+					return parseUnicodeToken(unicodeToken);
+				} catch (MalformedInputException ex) {
+					in.unread(unicodeToken, 0, i);
+					in.unread(n);
+					if (!permissive) {
+						throw ex;
 					}
 				}
-				// no unicode escape without 'u' at second position
-				if (buf[i + 1] != 'u')
-				{
-					// add to result buffer and
-					// continue to next character
-					escaped = true;
-					cbuf[off + result++] = c;
-					continue;
-				}
-				// no unicode escape with non-hex characters in positions 3-6
-				for (int j = i + 2, j2 = i + 6; j < j2; j++)
-				{
-					char e = buf[j];
-					if (!(((e >= '0') && (e <= '9')) || ((e >= 'a') && (e <= 'f')) || ((e >= 'A')
-													   && (e
-													       <= 'F'))))
-					{
-						// add to result buffer and continue to next character
-						// if permissive, otherwise throw exception
-						if (permissive)
-						{
-							escaped = true;
-							cbuf[off + result++] = c;
-							continue outer;
-						} else
-						{
-							throw new MalformedInputException(1);
-						}
-					}
-				}
-				// valid unicode escape
-				escaped = false;
-				cbuf[off + result++] = (char) Integer.parseInt(new String(buf, i + 2, 4), 16);
-				// need 5 more chars that were consumed for escape collapsing,
-				// but only if the escape sequence was not in the additional space
-				needed += Math.min(len - i - 1, 5);
-				// advance pointer
-				i += 5;
+			} else if (n > 0) {
+				in.unread(n);
+				escaped = true;
 			}
-			in.unread(buf, i, read - i);
-			// nothing was collapsed
-			if (needed == 0)
-			{
-				return result;
+			return '\\';
+		}
+
+		private int readOrFail() throws IOException {
+			int i = in.read();
+			if (i == -1) {
+				throw new MalformedInputException(0);
+			} else {
+				return i;
 			}
-			// read more chars due to escape collapsing
-			read = readn(cbuf, off + result, needed);
-			// EOF reached
-			if (read == -1)
-			{
-				return result;
+		}
+
+		private char parseUnicodeToken(char[] chars) throws MalformedInputException {
+			try {
+				return (char) Integer.parseInt(new String(chars), 16);
+			} catch (NumberFormatException ex){
+				throw new MalformedInputException(4);
 			}
-			return result + read;
 		}
 
 		@Override
